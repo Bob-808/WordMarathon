@@ -496,10 +496,11 @@ updateUI();
 
 if(humanWordsThisTurn>=5){
 
-clearInterval(timerHandle);
+    clearInterval(timerHandle);
 
-setTimeout(aiTurn,500);
+    log("AI is thinking...","ai");
 
+    setTimeout(aiTurn,50);
 }
 }
 
