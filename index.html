@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Marathon</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#20242a;
+    color:white;
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+}
+
+.panel{
+    background:#2c3138;
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:8px;
+}
+
+.info{
+    display:flex;
+    gap:30px;
+    flex-wrap:wrap;
+}
+
+.info div{
+    min-width:150px;
+}
+
+#history{
+    height:300px;
+    overflow-y:auto;
+    background:black;
+    padding:10px;
+    font-family:Consolas,monospace;
+}
+
+input{
+    width:300px;
+    padding:8px;
+    font-size:16px;
+}
+
+button{
+    padding:10px 20px;
+    margin:5px;
+    cursor:pointer;
+}
+
+.good{
+    color:lightgreen;
+}
+
+.bad{
+    color:salmon;
+}
+
+.ai{
+    color:lightblue;
+}
+
+.human{
+    color:khaki;
+}
+</style>
+</head>
+<body>
+
+<h1>WORD MARATHON</h1>
+
+<div class="panel info">
+
+<div>
+Current Word<br>
+<b id="currentWord">---</b>
+</div>
+
+<div>
+Round<br>
+<b id="round">1 / 10</b>
+</div>
+
+<div>
+Timer<br>
+<b id="timer">60</b>
+</div>
+
+<div>
+Human Score<br>
+<b id="humanScore">0</b>
+</div>
+
+<div>
+AI Score<br>
+<b id="aiScore">0</b>
+</div>
+
+<div>
+Words This Turn<br>
+<b id="turnCount">0 / 5</b>
+</div>
+
+</div>
+
+<div class="panel">
+
+<input id="wordInput" autocomplete="off">
+<button onclick="submitWord()">Submit</button>
+<button onclick="concede()">Concede</button>
+<button onclick="restartGame()">Restart</button>
+
+</div>
+
+<div id="history" class="panel"></div>
+
+<script>
+
+let DICTIONARY = [];
+let WORDSET = new Set();
+
+let currentWord="";
+let usedWords=new Set();
+
+let humanScore=0;
+let aiScore=0;
+
+let round=1;
+let humanWordsThisTurn=0;
+
+let timer=60;
+let timerHandle=null;
+
+async function loadDictionary(){
+
+    try{
+
+        const response =
+            await fetch("enable.txt");
+
+        const text =
+            await response.text();
+
+        DICTIONARY =
+            text
+            .split(/\r?\n/)
+            .map(
+                w => w.trim().toLowerCase()
+            )
+            .filter(
+                w => w.length > 2 &&
+                     w.length <= 8
+            );
+
+        WORDSET =
+            new Set(DICTIONARY);
+			
+			
+			
+			
+console.log(
+    "Dictionary size:",
+    WORDSET.size
+);
+
+console.log(
+    "lime:",
+    WORDSET.has("lime")
+);
+
+console.log(
+    "limes:",
+    WORDSET.has("limes")
+);
+
+console.log(
+    "mare:",
+    WORDSET.has("mare")
+);
+
+console.log(
+    "horn:",
+    WORDSET.has("horn")
+);
+			
+			
+			
+			
+
+        log(
+            "Dictionary loaded: " +
+            WORDSET.size +
+            " words",
+            "good"
+        );
+
+        startGame();
+    }
+    catch(err){
+
+        log(
+            "FAILED TO LOAD DICTIONARY",
+            "bad"
+        );
+
+        console.error(err);
+    }
+}
+
+function log(msg,css=""){
+    const h=document.getElementById("history");
+    h.innerHTML += `<div class='${css}'>${msg}</div>`;
+    h.scrollTop=h.scrollHeight;
+}
+
+function updateUI(){
+
+    document.getElementById("currentWord").textContent=currentWord;
+
+    document.getElementById("humanScore").textContent=humanScore;
+
+    document.getElementById("aiScore").textContent=aiScore;
+
+    document.getElementById("round").textContent=
+        round + " / 10";
+
+    document.getElementById("turnCount").textContent=
+        humanWordsThisTurn + " / 5";
+
+    document.getElementById("timer").textContent=timer;
+}
+
+function randomStartWord(){
+
+const starts = DICTIONARY.filter(
+w => w.length===3
+);
+
+return starts[
+Math.floor(Math.random()*starts.length)
+];
+}
+
+function startGame(){
+
+currentWord=randomStartWord();
+
+usedWords.add(currentWord);
+
+log("Starting word: "+currentWord,"good");
+
+startTimer();
+
+updateUI();
+}
+
+function startTimer(){
+
+clearInterval(timerHandle);
+
+timer=60;
+
+timerHandle=setInterval(()=>{
+
+timer--;
+
+updateUI();
+
+if(timer<=0){
+
+    clearInterval(timerHandle);
+
+    const moves = possibleMoves(currentWord);
+
+    if(moves.length > 0){
+
+        moves.sort((a,b)=>
+            b.length - a.length
+        );
+
+        const suggestions =
+            moves.slice(0,5);
+
+        log(
+            "Time expired. Possible moves: " +
+            suggestions.join(", "),
+            "ai"
+        );
+    }
+
+    alert("Time expired. AI wins.");
+
+    disableGame();
+}
+
+},1000);
+
+}
+
+function concessionWinner(winner){
+
+alert(winner + " wins.");
+
+disableGame();
+
+}
+
+function concede(){
+
+concessionWinner("AI");
+
+}
+
+function restartGame(){
+
+    clearInterval(timerHandle);
+
+    usedWords = new Set();
+
+    humanScore = 0;
+    aiScore = 0;
+
+    round = 1;
+    humanWordsThisTurn = 0;
+
+    document.getElementById("history").innerHTML = "";
+
+    document.getElementById("wordInput").disabled = false;
+    document.getElementById("wordInput").value = "";
+
+    currentWord = randomStartWord();
+
+    usedWords.add(currentWord);
+
+    log("New game started","good");
+    log("Starting word: " + currentWord,"good");
+
+    startTimer();
+    updateUI();
+}
+
+function disableGame(){
+
+document.getElementById("wordInput")
+.disabled=true;
+
+}
+
+function isAnagram(a,b){
+
+if(a.length!==b.length)
+return false;
+
+const sa=a.split("").sort().join("");
+const sb=b.split("").sort().join("");
+
+return sa===sb;
+}
+
+function oneLetterChanged(a,b){
+
+if(a.length!==b.length)
+return false;
+
+let diff=0;
+
+for(let i=0;i<a.length;i++){
+
+if(a[i]!==b[i])
+diff++;
+
+}
+
+return diff===1;
+}
+
+function oneLetterAdded(a,b){
+
+if(b.length!==a.length+1)
+return false;
+
+for(let i=0;i<b.length;i++){
+
+const test=
+b.slice(0,i)+b.slice(i+1);
+
+if(test===a)
+return true;
+
+}
+
+return false;
+}
+
+function validateMove(from,to){
+
+    if(from === to)
+        return "same word";
+
+    if(to.length > 8)
+        return "word exceeds 8 letters";
+
+    if(!WORDSET.has(to))
+        return "not in dictionary";
+
+    if(usedWords.has(to))
+        return "already used";
+
+    if(
+        oneLetterChanged(from,to) ||
+        oneLetterAdded(from,to) ||
+        isAnagram(from,to)
+    ){
+        return null;
+    }
+
+    return "not reachable from '" + from + "'";
+}
+
+
+
+
+
+function legalMove(from,to){
+
+if(from===to)
+return false;
+
+if(to.length>8)
+return false;
+
+if(!WORDSET.has(to))
+return false;
+
+if(usedWords.has(to))
+return false;
+
+return (
+oneLetterChanged(from,to)
+||
+oneLetterAdded(from,to)
+||
+isAnagram(from,to)
+);
+}
+
+function submitWord(){
+
+let w=document
+.getElementById("wordInput")
+.value
+.toLowerCase()
+.trim();
+
+const reason = validateMove(currentWord,w);
+
+if(reason){
+
+    log(
+        "Invalid: " +
+        w +
+        " (" +
+        reason +
+        ")",
+        "bad"
+    );
+
+    document.getElementById("wordInput").value = "";
+
+    return;
+}
+
+usedWords.add(w);
+
+humanScore+=w.length;
+
+humanWordsThisTurn++;
+
+currentWord=w;
+
+log("Human: "+w,"human");
+
+document
+.getElementById("wordInput")
+.value="";
+
+updateUI();
+
+if(humanWordsThisTurn>=5){
+
+clearInterval(timerHandle);
+
+setTimeout(aiTurn,500);
+
+}
+}
+
+function possibleMoves(word){
+
+let moves=[];
+
+for(let w of WORDSET){
+
+if(
+!usedWords.has(w)
+&& legalMove(word,w)
+){
+moves.push(w);
+}
+}
+
+return moves;
+}
+
+function bestAIMove(word){
+
+const moves=possibleMoves(word);
+
+if(moves.length===0)
+return null;
+
+moves.sort((a,b)=>{
+
+let sa=a.length+
+possibleMoves(a).length;
+
+let sb=b.length+
+possibleMoves(b).length;
+
+return sb-sa;
+});
+
+return moves[0];
+}
+
+function aiTurn(){
+
+log("AI turn begins","ai");
+
+for(let i=0;i<5;i++){
+
+let move=
+bestAIMove(currentWord);
+
+if(!move){
+
+alert(
+"AI cannot move. Human wins."
+);
+
+disableGame();
+
+return;
+}
+
+usedWords.add(move);
+
+aiScore+=move.length;
+
+currentWord=move;
+
+log("AI: "+move,"ai");
+
+}
+
+round++;
+
+humanWordsThisTurn=0;
+
+updateUI();
+
+if(round>10){
+
+endGame();
+
+return;
+}
+
+startTimer();
+}
+
+function endGame(){
+
+if(humanScore>aiScore){
+
+alert(
+"Human wins " +
+humanScore +
+" to " +
+aiScore
+);
+
+}
+else if(aiScore>humanScore){
+
+alert(
+"AI wins " +
+aiScore +
+" to " +
+humanScore
+);
+
+}
+else{
+
+alert("Tie game");
+
+}
+
+disableGame();
+}
+
+loadDictionary();
+
+
+document.getElementById("wordInput")
+.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+        submitWord();
+    }
+});
+</script>
+
+</body>
+</html>
