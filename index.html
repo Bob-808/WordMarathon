@@ -543,12 +543,14 @@ return moves[0];
 
 function aiTurn(){
 
+document.body.style.cursor = "wait";
 log("AI turn begins","ai");
 
 for(let i=0;i<5;i++){
 
 let move=
 bestAIMove(currentWord);
+document.body.style.cursor = "default";
 
 if(!move){
 
