@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Word Marathon</title>
+<title>Word Marathon v.1.0</title>
 
 <style>
 body{
@@ -75,7 +75,7 @@ button{
 </head>
 <body>
 
-<h1>WORD MARATHON</h1>
+<h1>WORD MARATHON v.1.0</h1>
 
 <div class="panel info">
 
@@ -496,11 +496,14 @@ updateUI();
 
 if(humanWordsThisTurn>=5){
 
+    log("AI is thinking...","ai");
+	document.body.style.cursor = "wait";
+
     clearInterval(timerHandle);
 
-    log("AI is thinking...","ai");
-
     setTimeout(aiTurn,50);
+	document.body.style.cursor = "default";
+
 }
 }
 
@@ -544,14 +547,12 @@ return moves[0];
 
 function aiTurn(){
 
-document.body.style.cursor = "wait";
 log("AI turn begins","ai");
 
 for(let i=0;i<5;i++){
 
 let move=
 bestAIMove(currentWord);
-document.body.style.cursor = "default";
 
 if(!move){
 
