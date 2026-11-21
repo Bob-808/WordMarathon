@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Word Marathon v.0.7</title>
+<title>Word Marathon v.0.9</title>
 
 <style>
 body{
@@ -75,7 +75,7 @@ button{
 </head>
 <body>
 
-<h1>WORD MARATHON v.0.7</h1>
+<h1>WORD MARATHON v.0.9</h1>
 
 <div class="panel info">
 
@@ -114,9 +114,8 @@ Words This Turn<br>
 <div class="panel">
 
 <input id="wordInput" autocomplete="off">
-<button onclick="submitWord()">Submit</button>
+<button onclick="restartGame()">New Game</button>
 <button onclick="concede()">Concede</button>
-<button onclick="restartGame()">Restart</button>
 
 </div>
 
@@ -203,7 +202,6 @@ console.log(
             "good"
         );
 
-        startGame();
     }
     catch(err){
 
@@ -261,6 +259,7 @@ log("Starting word: "+currentWord,"good");
 startTimer();
 
 updateUI();
+document.getElementById("wordInput").focus();
 }
 
 function startTimer(){
@@ -346,6 +345,7 @@ function restartGame(){
 
     startTimer();
     updateUI();
+	document.getElementById("wordInput").focus();
 }
 
 function disableGame(){
