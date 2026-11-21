@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Word Marathon v.1.0</title>
+<title>Word Marathon v.0.7</title>
 
 <style>
 body{
@@ -75,7 +75,7 @@ button{
 </head>
 <body>
 
-<h1>WORD MARATHON v.1.0</h1>
+<h1>WORD MARATHON v.0.7</h1>
 
 <div class="panel info">
 
@@ -138,6 +138,7 @@ let humanWordsThisTurn=0;
 
 let timer=60;
 let timerHandle=null;
+
 
 async function loadDictionary(){
 
@@ -507,7 +508,34 @@ if(humanWordsThisTurn>=5){
 }
 }
 
+
 function possibleMoves(word){
+
+
+    let moves=[];
+
+    for(let w of WORDSET){
+
+        if(
+            !usedWords.has(w)
+            &&
+            (
+                oneLetterChanged(word,w)
+                ||
+                oneLetterAdded(word,w)
+                ||
+                isAnagram(word,w)
+            )
+        ){
+            moves.push(w);
+        }
+    }
+
+
+    return moves;
+}
+
+function xxxpossibleMoves(word){
 
 let moves=[];
 
@@ -525,6 +553,36 @@ return moves;
 }
 
 function bestAIMove(word){
+
+    const moves = possibleMoves(word);
+
+    if(moves.length===0)
+        return null;
+
+    const shortMoves =
+        moves.filter(
+            m => m.length <= 5
+        );
+
+    if(shortMoves.length > 0){
+
+        shortMoves.sort(
+            () => Math.random() - 0.5
+        );
+
+        return shortMoves[0];
+    }
+
+    moves.sort(
+        (a,b)=>a.length-b.length
+    );
+
+    return moves[0];
+}
+
+
+
+function xxxbestAIMove(word){
 
 const moves=possibleMoves(word);
 
